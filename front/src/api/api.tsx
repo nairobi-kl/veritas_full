@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8021';
+const API_URL = 'https://veritas-t6l0.onrender.com';
 
 export async function createTest(testData: any, token: string) {
   const res = await fetch(`${API_URL}/tests`, {
@@ -21,7 +21,7 @@ export async function createTest(testData: any, token: string) {
 }
 
 export async function getTeacherTests(teacherId: number, token: string) {
-  const res = await fetch(`http://localhost:8021/tests/${teacherId}`, {
+  const res = await fetch(`https://veritas-t6l0.onrender.com/tests/${teacherId}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -32,7 +32,7 @@ export async function getTeacherTests(teacherId: number, token: string) {
 }
 
 export async function getAvailableTests(groupId: number, token: string) {
-  const res = await fetch(`http://localhost:8021/student/tests/${groupId}`, {
+  const res = await fetch(`https://veritas-t6l0.onrender.com/student/tests/${groupId}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -66,7 +66,6 @@ export async function getGroups(token: string) {
   return res.json();
 }
 
-// api.ts
 export async function submitTestResults(data: any, token: string) {
   const res = await fetch(`${API_URL}/submissions`, {
     method: 'POST',

@@ -1,10 +1,9 @@
-// contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { User, AuthError } from '../types';
 
 interface AuthContextType {
   user: User | null;
-  token: string | null; // ДОДАЄМО ТОКЕН
+  token: string | null; 
   login: (email: string, password: string) => Promise<boolean>;
   register: (data: RegisterData) => Promise<boolean>;
   logout: () => void;
@@ -32,19 +31,18 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null); // ДОДАЄМО СТАН ДЛЯ ТОКЕНА
+  const [token, setToken] = useState<string | null>(null); 
   const [error, setError] = useState<AuthError | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const clearError = () => setError(null);
 
-  // ЛОГІН
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8021/login', {
+      const response = await fetch('https://veritas-t6l0.onrender.com/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -57,11 +55,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return false;
       }
 
-      // ЗБЕРІГАЄМО ТОКЕН
       const authToken = result.token;
       localStorage.setItem('token', authToken);
       localStorage.setItem('role', result.role);
-      setToken(authToken); // ДОДАЄМО В СТАН
+      setToken(authToken); 
 
       const [lastName, firstName] = result.user_name ? result.user_name.split(' ') : ['Користувач', ''];
 
@@ -75,7 +72,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         profile: result.role === 'admin' ? 'Викладач' : 'Студент',
         role: result.role === 'admin' ? 'teacher' : 'student',
         isAuthenticated: true,
-        token: authToken // ДОДАЄМО В USER (якщо потрібно)
+        token: authToken 
       };
 
       setUser(userData);
@@ -90,7 +87,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // РЕЄСТРАЦІЯ
   const register = async (data: RegisterData): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
@@ -111,7 +107,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return false;
       }
 
-      const response = await fetch('http://localhost:8021/register', {
+      const response = await fetch('https://veritas-t6l0.onrender.com/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -133,7 +129,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const authToken = result.token;
       localStorage.setItem('token', authToken);
       localStorage.setItem('role', result.role);
-      setToken(authToken); // ДОДАЄМО В СТАН
+      setToken(authToken); 
 
       const [lastName, firstName] = data.user_name ? data.user_name.split(' ') : ['Користувач', ''];
 
@@ -162,22 +158,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // ВИХІД
   const logout = () => {
     setUser(null);
-    setToken(null); // ОЧИЩАЄМО ТОКЕН
+    setToken(null); 
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     localStorage.removeItem('role');
   };
 
-  // ВІДНОВЛЕННЯ ПІСЛЯ ПЕРЕЗАПУСКУ
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
     if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
-      setToken(storedToken); // ВІДНОВЛЮЄМО ТОКЕН
+      setToken(storedToken); 
     }
   }, []);
 
@@ -185,7 +179,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <AuthContext.Provider
       value={{
         user,
-        token, // ПОВЕРТАЄМО ТОКЕН
+        token, 
         login,
         register,
         logout,

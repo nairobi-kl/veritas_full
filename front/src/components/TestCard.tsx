@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 interface TestCardProps {
   test: Test;
   onStartTest: (test: Test) => void;
+   disabled?: boolean; 
 }
 
 export const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
@@ -12,13 +13,11 @@ export const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
 
   const [alreadySubmitted, setAlreadySubmitted] = useState<boolean>(false);
   const [loadingCheck, setLoadingCheck] = useState<boolean>(true);
-
-  // === Перевіряємо, чи студент уже проходив тест ===
   useEffect(() => {
     const check = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8021/submissions/check/${test.id}`,
+          `https://veritas-t6l0.onrender.com/submissions/check/${test.id}`,
           { headers: { Authorization: `Bearer ${user?.token}` } }
         );
 
@@ -33,32 +32,42 @@ export const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
 
     if (user?.token) check();
   }, [test.id, user?.token]);
+const parseDate = (str?: string): Date | null => {
+  if (!str) return null;
+  try {
+    if (str.includes('T') || str.includes('Z')) {
+      return new Date(str);
+    }
+    const [datePart, timePart] = str.split(' ');
+    if (datePart && timePart) {
+      return new Date(`${datePart}T${timePart}Z`);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
 
-  // -------------------- Парс дат --------------------
-  const parseDate = (str?: string): Date | null => {
-    if (!str) return null;
-    const date = new Date(str);
-    return isNaN(date.getTime()) ? null : date;
-  };
+const formatDisplayDate = (str?: string): string => {
+  const d = parseDate(str);
+  if (!d || isNaN(d.getTime())) return "—";
+  return d.toLocaleString('uk-UA', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).replace(',', '');
+};
 
-  const formatDisplayDate = (str?: string): string => {
-    const d = parseDate(str);
-    if (!d) return "—";
-    const dd = String(d.getDate()).padStart(2, "0");
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const yyyy = d.getFullYear();
-    const hh = String(d.getHours()).padStart(2, "0");
-    const min = String(d.getMinutes()).padStart(2, "0");
-    return `${dd}.${mm}.${yyyy}, ${hh}:${min}`;
-  };
 
   const now = new Date();
   const start = parseDate(test.startTime);
   const end = parseDate(test.endTime);
+  
 
   const isTimeAvailable = start && end && now >= start && now <= end;
 
-  // -------------------- Логіка статусу --------------------
   let statusLabel = "Недоступно";
 
   if (alreadySubmitted) {
@@ -69,8 +78,6 @@ export const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
   } else {
     statusLabel = "Розпочати тест";
   }
-
-  // -------------------- Дизейбл кнопки --------------------
   const isDisabled =
     loadingCheck ||
     alreadySubmitted ||
@@ -81,10 +88,10 @@ export const TestCard: React.FC<TestCardProps> = ({ test, onStartTest }) => {
   };
 
   return (
-    <div className="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transform hover:-translate-y-3 transition-all duration-500 overflow-hidden">
+    <div className="group bg-white rounded-3xl shadow-xl hover:shadow-2xl transform hover:-translate-y-3 transition-all duration-500 overflow-hidden min-h-[400px]">
       <div className="p-8 flex flex-col h-full">
         
-        <h3 className="text-3xl font-black text-center text-purple-700 mb-6">
+        <h3 className="text-3xl font-black text-center min-h-[80px] text-purple-700 mb-6">
           {test.subject}
         </h3>
 

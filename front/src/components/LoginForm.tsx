@@ -1,4 +1,3 @@
-// src/components/LoginForm.tsx
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
@@ -16,68 +15,97 @@ export const LoginForm: React.FC<{ onSwitchToRegister: () => void }> = ({ onSwit
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && error.type === 'login' && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-2xl text-center"
-        >
-          {error.message}
-        </motion.div>
-      )}
+  <form onSubmit={handleSubmit} className="space-y-5">
 
-      <motion.input
-        whileFocus={{ scale: 1.02 }}
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Корпоративна пошта"
+    {error && error.type === 'login' && (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-red-50 border border-red-200 text-red-600 px-5 py-3 rounded-xl text-center text-sm"
+      >
+        {error.message}
+      </motion.div>
+    )}
+    <motion.input
+      whileFocus={{ scale: 1.02 }}
+      type="email"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      placeholder="Корпоративна пошта"
+      required
+      className="
+        w-full 
+        px-5 py-4         /* було px-6 py-5 */
+        text-[15px]       /* компактніший текст */
+        bg-white/80 backdrop-blur 
+        rounded-xl        /* було rounded-2xl */
+        focus:ring-4 focus:ring-purple-300 
+        transition-all
+      "
+    />
+    <motion.div whileFocus={{ scale: 1.02 }} className="relative">
+      <input
+        type={showPassword ? 'text' : 'password'}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Пароль"
         required
-        className="w-full px-6 py-5 bg-white/80 backdrop-blur rounded-2xl focus:ring-4 focus:ring-purple-300 focus:outline-none transition-all"
+        className="
+          w-full 
+          px-5 py-4
+          text-[15px]
+          bg-white/80 backdrop-blur 
+          rounded-xl
+          focus:ring-4 focus:ring-purple-300 
+          pr-12
+        "
       />
-
-      <motion.div whileFocus={{ scale: 1.02 }} className="relative">
-        <input
-          type={showPassword ? 'text' : 'password'}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Пароль"
-          required
-          className="w-full px-6 py-5 bg-white/80 backdrop-blur rounded-2xl focus:ring-4 focus:ring-purple-300 focus:outline-none pr-14"
-        />
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-purple-600 hover:text-purple-700"
+      >
+        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+      </button>
+    </motion.div>
+    <a
+      href="#"
+      className="text-purple-600 hover:text-purple-700 text-xs font-medium block text-right"
+    >
+      Забули пароль?
+    </a>
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      type="submit"
+      disabled={isLoading}
+      className="
+        w-full 
+        bg-gradient-to-r from-purple-600 to-blue-600 
+        text-white 
+        py-4               /* було py-5 */
+        rounded-xl 
+        font-bold text-base /* було text-lg */
+        shadow-lg hover:shadow-xl 
+        transition-all 
+        flex items-center justify-center gap-2
+      "
+    >
+      {isLoading ? 'Вхід...' : 'Увійти'}
+      <ArrowRight size={20} />
+    </motion.button>
+    <div className="text-center pt-3">
+      <p className="text-gray-600 text-sm">
+        Новий користувач?{' '}
         <button
           type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-5 top-1/2 -translate-y-1/2 text-purple-600 hover:text-purple-700"
+          onClick={onSwitchToRegister}
+          className="text-purple-600 font-bold hover:text-purple-700"
         >
-          {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+          Зареєструватися
         </button>
-      </motion.div>
-
-      <a href="#" className="text-purple-600 hover:text-purple-700 text-sm font-medium block text-right">
-        Забули пароль?
-      </a>
-
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        type="submit"
-        disabled={isLoading}
-        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-5 rounded-2xl font-bold text-lg shadow-lg hover:shadow-2xl transition-all flex items-center justify-center gap-3"
-      >
-        {isLoading ? 'Вхід...' : 'Увійти'}
-        <ArrowRight size={22} />
-      </motion.button>
-
-      <div className="text-center pt-4">
-        <p className="text-gray-600">
-          Новий користувач?{' '}
-          <button type="button" onClick={onSwitchToRegister} className="text-purple-600 font-bold hover:text-purple-700">
-            Зареєструватися
-          </button>
-        </p>
-      </div>
-    </form>
-  );
+      </p>
+    </div>
+  </form>
+);
 };

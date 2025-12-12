@@ -3,6 +3,7 @@
   "short_name": "Veritas",
   "description": "Система перевірки знань нового покоління",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f8f9ff",
   "theme_color": "#a855f7",
@@ -17,7 +18,21 @@
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "maskable"
     }
-  ]
+  ],
+"screenshots": [
+  {
+    "src": "/screenshot-wide.png",
+    "sizes": "1580x720",
+    "type": "image/png",
+    "form_factor": "wide"
+  },
+  {
+    "src": "/screenshot-mobile.png",
+    "sizes": "591x1280",
+    "type": "image/png"
+  }
+]
+
 }

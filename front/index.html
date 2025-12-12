@@ -2,25 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    
+    <!-- PWA МАНІФЕСТ -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Іконки -->
     <link rel="icon" type="image/svg+xml" href="/veritaslg.svg" />
+    <link rel="apple-touch-icon" href="/icon-200.png">
+
+    <!-- Тема -->
+    <meta name="theme-color" content="#a855f7" />
+
+    <!-- iOS PWA підтримка -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Veritas">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Veritas</title>
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
-<!-- У <head> -->
-<link rel="manifest" href="/manifest.json" />
-<link rel="icon" href="/favicon.ico" />
-
-<!-- Для iOS -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="Veritas">
-<link rel="apple-touch-icon" href="/icon-192.png">
-
-<!-- Тема -->
-<meta name="theme-color" content="#a855f7">

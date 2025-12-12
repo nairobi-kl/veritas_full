@@ -40,9 +40,9 @@ export const AnalyticsPage: React.FC = () => {
       let url = '';
 
       if (isTeacher) {
-        url = 'http://localhost:8021/teacher/analytics';
+        url = 'https://veritas-t6l0.onrender.com/teacher/analytics';
       } else {
-        url = `http://localhost:8021/student/analytics/${user.id}`;
+        url = `https://veritas-t6l0.onrender.com/student/analytics/${user.id}`;
       }
 
       console.log('Запит на аналітику →', url);
@@ -62,14 +62,11 @@ export const AnalyticsPage: React.FC = () => {
       }
 
       const data = await res.json();
-
-      // КЛЮЧОВЕ ВИПРАВЛЕННЯ — завжди приводимо до масиву!
       let resultsArray: TestResult[] = [];
 
       if (isTeacher) {
         resultsArray = Array.isArray(data) ? data : [];
       } else {
-        // Для студента приходить { allResults: [...] } або { subjects: [...], allResults: [...] }
         resultsArray = Array.isArray(data) 
           ? data 
           : Array.isArray(data.allResults) 
@@ -93,7 +90,6 @@ export const AnalyticsPage: React.FC = () => {
   fetchResults();
 }, [user, isTeacher]);
 
-  // Унікальні предмети та групи
   const subjects = useMemo(() => {
     const unique = [...new Set(results.map(r => r.subject))];
     return ['all', ...unique.sort()];
@@ -102,7 +98,6 @@ export const AnalyticsPage: React.FC = () => {
  const groups = useMemo(() => {
   if (!isTeacher) return ['all'];
 
-  // 🔧 ВАЖЛИВО: прибираємо порожні групи
   const unique = [...new Set(
     results
       .map(r => r.studentGroup)
@@ -112,7 +107,6 @@ export const AnalyticsPage: React.FC = () => {
   return ['all', ...unique.sort()];
 }, [results, isTeacher]);
 
-  // Фільтровані результати
   const filteredResults = useMemo(() => {
     return results.filter(r => {
       const matchSubject = selectedSubject === 'all' || r.subject === selectedSubject;
@@ -121,7 +115,6 @@ export const AnalyticsPage: React.FC = () => {
     });
   }, [results, selectedSubject, selectedGroup, isTeacher]);
 
-  // === Аналітика по предметах ===
   const subjectAnalytics = useMemo(() => {
     const grouped = filteredResults.reduce((acc, r) => {
       const key = r.subject;
@@ -143,7 +136,7 @@ export const AnalyticsPage: React.FC = () => {
   }, [filteredResults]);
 
  const groupAnalytics = useMemo(() => {
-  console.log('Перераховуємо groupAnalytics...'); // ← це має з’явитися в консолі!
+  console.log('Перераховуємо groupAnalytics...');
 
   if (!isTeacher || filteredResults.length === 0) {
     console.log('Повертаємо [] — немає даних або не викладач');
@@ -182,14 +175,13 @@ export const AnalyticsPage: React.FC = () => {
   return result;
 }, [filteredResults, isTeacher]);
 
-  // === Прогрес студента (тільки для студента) ===
 const studentProgress = useMemo(() => {
   if (isTeacher) return [];
 
   const safeGetDate = (r: any): string => {
     const raw = 'completedAt' in r ? r.completedAt : r.endTime;
 
-    if (!raw || typeof raw !== 'string') return ''; // ← повний захист
+    if (!raw || typeof raw !== 'string') return ''; 
 
     const d = new Date(raw);
     return isNaN(d.getTime()) ? '' : d.toLocaleDateString('uk-UA');
@@ -272,15 +264,15 @@ const groupFullAnalytics = useMemo(() => {
           animate={{ opacity: 1, y: 0 }}
           className="text-left mb-12"
         >
-          <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-4">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-4">
             {isTeacher ? 'Аналітика викладача' : 'Моя аналітика'}
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl">
+          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl">
             {isTeacher ? 'Статистика по групах та предметах' : 'Ваш прогрес у навчанні'}
           </p>
         </motion.div>
 
-        {/* === Фільтри === */}
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -321,7 +313,6 @@ const groupFullAnalytics = useMemo(() => {
           </div>
         </motion.div>
 
-        {/* === Статистика по предметах === */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -374,8 +365,8 @@ const groupFullAnalytics = useMemo(() => {
           verticalAlign="top" 
           height={36}
           wrapperStyle={{ 
-    top: 1,                     // підняли легенду на 10px від верху графіка
-    paddingBottom: 20            // додали відступ знизу, щоб не прилипала до стовпчиків
+    top: 1,                     
+    paddingBottom: 20            
   }}
           iconType="rect"
           formatter={(value) => <span className="text-sm font-medium">{value}</span>}
@@ -386,7 +377,6 @@ const groupFullAnalytics = useMemo(() => {
         <Bar dataKey="satisfactory" name="Задовільно (60–74%)" fill="#fbbf24" radius={[8, 8, 0, 0]} stackId="a" />
         <Bar dataKey="poor" name="Незадовільно (<60%)" fill="#f87171" radius={[8, 8, 0, 0]} stackId="a" />
 
-        {/* Окремий середній бал — поверх усього */}
        <Bar
   dataKey="averagePercent"
   name="Середній бал"
@@ -406,7 +396,6 @@ const groupFullAnalytics = useMemo(() => {
   )}
 </motion.div>
           ) : (
-            // === Прогрес студента ===
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -433,7 +422,6 @@ const groupFullAnalytics = useMemo(() => {
           )}
         </div>
 
-        {/* === Картки зі статистикою === */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
             { label: 'Всього спроб', value: filteredResults.length, color: 'from-purple-500 to-purple-600' },

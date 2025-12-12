@@ -8,10 +8,8 @@ import { Dashboard } from './components/Dashboard';
 const AppContent: React.FC = () => {
   const { user } = useAuth();
 
-  // 🔹 одразу відкривається сторінка реєстрації
   const [isRegistering, setIsRegistering] = useState(true);
 
-  // 🔹 якщо користувач залогінений — одразу показуємо Dashboard
   useEffect(() => {
     if (user?.isAuthenticated) {
       setIsRegistering(false);
@@ -26,7 +24,7 @@ const AppContent: React.FC = () => {
     <AuthLayout
       title={isRegistering ? 'Реєстрація' : 'Вхід'}
       subtitle={isRegistering ? 'Створіть новий акаунт' : 'Увійдіть в систему'}
-      isLogin={!isRegistering}                    // Ось це важливо!
+      isLogin={!isRegistering}                 
       onToggle={() => setIsRegistering(!isRegistering)}
     >
       {isRegistering ? (

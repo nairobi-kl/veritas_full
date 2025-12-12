@@ -55,7 +55,7 @@ export interface Question {
   id: string;
   type: 'single' | 'multiple' | 'text';
   question: string;
-  options?: QuestionOption[]; // <-- ось ключове
+  options?: QuestionOption[]; 
   points: number;
 }
 
@@ -67,10 +67,10 @@ export interface TestSession {
   lecturer: string;
   startTime: string;
   endTime: string;
-  duration: number; // in minutes
+  duration: number; 
   questions: Question[];
   answers: { [questionId: string]: string | string[] };
-  timeRemaining: number; // in seconds
+  timeRemaining: number;
   finalScore?: number;
 }
 
@@ -112,8 +112,8 @@ export interface CreateTestData {
 export interface DraftQuestion {
   type: 'single' | 'multiple' | 'text';
   question: string;
-  options?: string[];           // для single/multiple — варіанти, для text — ключові слова
-  correctAnswer: number[];      // завжди індекси (для single/multiple)
+  options?: string[];           
+  correctAnswer: number[];      
   points: number;
 }
 
@@ -122,7 +122,7 @@ export interface CreateQuestionData {
   type: 'single' | 'multiple' | 'text';
   question: string;
   options?: string[];
-  correctAnswer: string[];      // завжди текст правильних відповідей
+  correctAnswer: string[];      
   points: number;
 }
 

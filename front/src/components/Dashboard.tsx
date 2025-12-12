@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ChevronDown, Plus } from 'lucide-react';
 import { motion, AnimatePresence} from 'framer-motion';
 import { Sidebar } from './Sidebar';
@@ -12,6 +12,7 @@ import { MyResultsPage } from './MyResultsPage';
 import { CreateTestPage } from './CreateTestPage';
 import { AnalyticsPage } from './AnalyticsPage';
 import { useAuth } from '../contexts/AuthContext';
+import { HistoryPage } from './HistoryPage';
 import { SettingsPage } from './SettingsPage';
 import { Test, TestResult, TestSession, CreateTestData, Question } from '../types';
 import {
@@ -25,7 +26,7 @@ import {
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'tests' | 'results' | 'analytics' | 'settings'>('tests');
+  const [activeTab, setActiveTab] = useState<'tests' |'history'| 'results' | 'analytics' | 'settings'>('tests');
   const [tests, setTests] = useState<Test[]>([]);
   const [results, setResults] = useState<TestResult[]>([]);
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
@@ -33,15 +34,27 @@ export const Dashboard: React.FC = () => {
   const [currentTestSession, setCurrentTestSession] = useState<TestSession | null>(null);
   const [showTestResults, setShowTestResults] = useState(false);
   const [showCreateTest, setShowCreateTest] = useState(false);
+  const [upcomingSubjectFilter, setUpcomingSubjectFilter] = useState<string>('all');
+  const [upcomingSortOrder, setUpcomingSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [historySubjectFilter, setHistorySubjectFilter] = useState<string>('all');
+  const [historySortOrder, setHistorySortOrder] = useState<'desc' | 'asc'>('desc');
 
-// === Безпечні значення ===
 const token = user?.token ?? '';
-const userId = user?.id ? Number(user.id) : 0; // ← user.id — string, але OK
+const userId = user?.id ? Number(user.id) : 0; 
 const groupId = user?.groupNumber ? Number(user.groupNumber) : 0;
 const isTeacher = user?.role === 'teacher';
 
-// === Завантаження тестів ===
-// === Завантаження тестів ===
+const subjects = useMemo(() => {
+    const unique = Array.from(
+      new Set(
+        tests
+          .map((t) => t.subject)
+          .filter((s): s is string => Boolean(s && s.trim()))
+      )
+    ).sort();
+    return ['all', ...unique];
+  }, [tests]);
+
 useEffect(() => {
   if (!user || !token || userId === 0) {
     console.log('Немає user, token або userId');
@@ -53,16 +66,14 @@ useEffect(() => {
       let data: any[] = [];
 
       if (isTeacher) {
-        // Викладач — свої тести
-        const response = await fetch(`http://localhost:8021/tests/${userId}`, {
+        const response = await fetch(`https://veritas-t6l0.onrender.com/tests/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error('Помилка завантаження тестів викладача');
         data = await response.json();
       } else {
-        // Студент — доступні тести за групою
         if (!groupId) return;
-        const response = await fetch(`http://localhost:8021/student/tests/${groupId}`, {
+        const response = await fetch(`https://veritas-t6l0.onrender.com/student/tests/${groupId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!response.ok) throw new Error('Помилка завантаження тестів студента');
@@ -97,8 +108,6 @@ useEffect(() => {
 
   loadTests();
 }, [user, token, userId, groupId]);
-
-  // === Створення тесту ===
   const handleSaveTest = async (testData: CreateTestData) => {
     if (!token || !userId) {
       alert('Користувач не авторизований');
@@ -138,13 +147,11 @@ useEffect(() => {
     }
   };
 
-  // === Запуск тесту ===
   const handleStartTest = (test: Test) => {
     setSelectedTest(test);
     setIsModalOpen(true);
   };
 
-  // === Завантаження питань ===
   const handleModalStart = async () => {
     setIsModalOpen(false);
     if (!selectedTest || !token) return;
@@ -153,19 +160,15 @@ useEffect(() => {
      const data = await getTestQuestions(Number(selectedTest.id), token);
 
 const questions: Question[] = data.map((q: any): Question => {
-  // 🔹 Гарантуємо, що options завжди масив
   let parsedOptions: any[] = [];
 
   try {
-    // Якщо бекенд повернув JSON-рядок
     if (typeof q.options === "string") {
       parsedOptions = JSON.parse(q.options);
     } 
-    // Якщо це вже масив об’єктів
     else if (Array.isArray(q.options)) {
       parsedOptions = q.options;
     } 
-    // Якщо взагалі щось дивне
     else {
       parsedOptions = [];
     }
@@ -173,9 +176,8 @@ const questions: Question[] = data.map((q: any): Question => {
     parsedOptions = [];
   }
 
-  // 🔹 Перетворюємо кожен елемент у стабільний об’єкт
   const safeOptions = parsedOptions.map((opt) => ({
-  id: Number(opt.id),  // забираємо з БД правильний ID
+  id: Number(opt.id),  
   text: String(opt.text),
   is_correct: Boolean(opt.is_correct)
 }));
@@ -212,13 +214,11 @@ const questions: Question[] = data.map((q: any): Question => {
       alert('Не вдалося завантажити питання');
     }
   };
-  // === Допоміжні ===
   const handleBackToHome = () => {
     setCurrentTestSession(null);
     setActiveTab('tests');
   };
 
-  // === Завершення тесту ===
 const handleTestComplete = (session: TestSession) => {
   const score = session.finalScore ?? 0;
   const maxScore = session.questions.reduce((s, q) => s + q.points, 0);
@@ -239,10 +239,35 @@ const handleTestComplete = (session: TestSession) => {
     studentName: user?.lastName,
     studentGroup: user?.groupNumber,
   },
-]); // Примусово кастуємо, якщо не впевнена
+]); 
 
   setCurrentTestSession(null);
   setActiveTab('results');
+};
+
+const parseDate = (str: string): Date | null => {
+  if (!str) return null;
+  try {
+    if (str.includes('T') || str.includes('Z')) {
+      return new Date(str);
+    }
+
+    if (str.includes('-') && str.includes(':')) {
+      const cleaned = str.replace(/:\d{2}$/, '');
+      return new Date(`${cleaned}Z`); 
+    }
+
+    if (str.includes('.') && str.includes(',')) {
+      const [datePart, timePart] = str.split(', ');
+      const [day, month, year] = datePart.split('.').map(Number);
+      const [hours, minutes] = timePart.split(':').map(Number);
+      return new Date(Date.UTC(year, month - 1, day, hours, minutes));
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
 };
 
   const handleViewResults = (test: Test) => {
@@ -255,10 +280,69 @@ const handleTestComplete = (session: TestSession) => {
     setSelectedTest(null);
   };
 
+  const parseLocalDate = (str: string) => {
+  const [date, time] = str.split(" ");
+  return new Date(date + "T" + time + "Z");
+};
+
+
   const handleCreateTest = () => setShowCreateTest(true);
   const handleBackFromCreate = () => setShowCreateTest(false);
+  const isTestAvailable = (test: Test) => {
+    if (!test.startTime || !test.endTime) return false;
+    const now = new Date();
+     const start = parseDate(test.startTime);
+  const end = parseDate(test.endTime);
+   if (!start || !end) return false;
+    return now >= start && now <= end;
+  };
 
-  // === Умовний рендер ===
+  const completedTestIds = results.map((r) => String(r.testId));
+
+  const isTestEnded = (test: Test) => {
+  if (!test.endTime) return false;
+
+  const end = parseDate(test.endTime);
+  if (!end) return false; 
+
+  return new Date() > end;
+};
+
+
+ const upcomingTests = isTeacher
+    ? tests.filter(t => !isTestEnded(t))
+    : tests.filter(t => !completedTestIds.includes(String(t.id)) && isTestAvailable(t));
+
+  const historyTests = isTeacher
+    ? tests.filter(t => isTestEnded(t))
+    : tests.filter(t => completedTestIds.includes(String(t.id)) || !isTestAvailable(t));
+
+  const parseDateSafe = (value: string) => parseLocalDate(value).getTime();
+
+  const filteredUpcoming = useMemo(() => {
+    const filtered = upcomingTests.filter((t) =>
+      upcomingSubjectFilter === 'all' ? true : t.subject === upcomingSubjectFilter
+    );
+
+    return [...filtered].sort((a, b) => {
+      const da = parseDateSafe(a.startTime);
+      const db = parseDateSafe(b.startTime);
+      return upcomingSortOrder === 'desc' ? db - da : da - db;
+    });
+  }, [upcomingTests, upcomingSubjectFilter, upcomingSortOrder]);
+
+  const filteredHistory = useMemo(() => {
+    const filtered = historyTests.filter((t) =>
+      historySubjectFilter === 'all' ? true : t.subject === historySubjectFilter
+    );
+
+    return [...filtered].sort((a, b) => {
+      const da = parseDateSafe(a.startTime);
+      const db = parseDateSafe(b.startTime);
+      return historySortOrder === 'desc' ? db - da : da - db;
+    });
+  }, [historyTests, historySubjectFilter, historySortOrder]);
+
   if (currentTestSession) {
     return (
       <TestPage
@@ -277,7 +361,6 @@ const handleTestComplete = (session: TestSession) => {
     return <CreateTestPage onBack={handleBackFromCreate} onSave={handleSaveTest} />;
   }
 
-  // === Основний контент ===
   const renderContent = () => {
   if (activeTab === 'tests') {
     return (
@@ -289,7 +372,6 @@ const handleTestComplete = (session: TestSession) => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="relative"
       >
-        {/* Заголовок */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -297,10 +379,10 @@ const handleTestComplete = (session: TestSession) => {
           className="flex justify-between items-center mb-8"
         >
           <div className="flex flex-col">
-           <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-4">
+           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-4">
             Актуальні тести
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl">
+          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl">
            Ваші завдання вже чекають виконання
           </p>
           </div>
@@ -322,45 +404,62 @@ const handleTestComplete = (session: TestSession) => {
             </motion.button>
           )}
         </motion.div>
-
-        {/* Сітка карток */}
         <motion.div
           layout
           className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"
         >
           <AnimatePresence>
-            {tests.map((test, i) => (
-              <motion.div
-                key={test.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="w-full"
-              >
-                {user?.role === 'teacher' ? (
-                  <TeacherTestCard
-                    test={test}
-                    onViewResults={handleViewResults}
-                  />
-                ) : (
-                  <TestCard
-                    test={test}
-                    onStartTest={handleStartTest}
-                  />
-                )}
-              </motion.div>
-            ))}
-          </AnimatePresence>
+    {filteredUpcoming.length > 0 ? (
+      filteredUpcoming.map((test, i) => (
+        <motion.div
+          key={test.id}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.5, delay: i * 0.08 }}
+          className="w-full"
+        >
+          {user?.role === 'teacher' ? (
+            <TeacherTestCard
+              test={test}
+              onViewResults={handleViewResults}
+            />
+          ) : (
+            <TestCard
+              test={test}
+              onStartTest={handleStartTest}
+            />
+          )}
+        </motion.div>
+      ))
+    ) : (
+      <p className="text-gray-500 col-span-full text-center text-xl py-6">
+        Вітаємо! Ніякий із тестів не є актуальним для Вас, можете відпочивати
+      </p>
+    )}
+  </AnimatePresence>
         </motion.div>
       </motion.div>
       </div>
       </div>
     );
   }
-
+  if (activeTab === "history") {
+    return (
+      <HistoryPage
+        tests={filteredHistory}
+        subjects={subjects}
+        subjectFilter={historySubjectFilter}
+        setSubjectFilter={setHistorySubjectFilter}
+        sortOrder={historySortOrder}
+        setSortOrder={setHistorySortOrder}
+        isTeacher={isTeacher}
+        onStartTest={handleStartTest}
+        onViewResults={handleViewResults}
+      />
+    );
+  }
     if (activeTab === 'results') {
-  // Викладач — бачить лише повідомлення
   if (user?.role === 'teacher') {
     return (
       <div className="flex items-center justify-center h-96">
@@ -371,12 +470,9 @@ const handleTestComplete = (session: TestSession) => {
     );
   }
 
-  // Студент — бачить свої результати
   if (user?.role === 'student') {
     return <MyResultsPage />;
   }
-
-  // На всяк випадок (якщо role не визначений)
   return (
     <div className="flex items-center justify-center h-96">
       <p className="text-gray-500 text-lg">Увійдіть в систему</p>
@@ -407,7 +503,7 @@ if (activeTab === 'settings') {
           else setActiveTab(tab as 'tests' | 'results');
         }}
       />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col md:ml-80">
         <main className="flex-1 p-8 overflow-auto">{renderContent()}</main>
       </div>
 

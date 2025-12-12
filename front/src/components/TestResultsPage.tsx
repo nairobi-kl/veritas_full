@@ -39,8 +39,6 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
   const [results, setResults] = useState<StudentResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGroup, setSelectedGroup] = useState('Всі групи');
-
-  // відповіді конкретного студента
   const [selectedStudent, setSelectedStudent] = useState<StudentResult | null>(null);
   const [studentAnswers, setStudentAnswers] = useState<StudentAnswer[]>([]);
   const [answersLoading, setAnswersLoading] = useState(false);
@@ -53,8 +51,8 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
 
       try {
         const endpoint = submissionId
-          ? `http://localhost:8021/submissions/${submissionId}/answers`
-          : `http://localhost:8021/tests/${test.id}/results`;
+          ? `https://veritas-t6l0.onrender.com/submissions/${submissionId}/answers`
+          : `https://veritas-t6l0.onrender.com/tests/${test.id}/results`;
 
         const res = await fetch(endpoint, {
           headers: { Authorization: `Bearer ${token}` },
@@ -67,7 +65,6 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
         const formattedResults: StudentResult[] = Array.isArray(data)
           ? data.map((r: any) => ({
               id: r.id || r.submission_id,
-              // робимо максимально надійний пошук studentId
               studentId:
                 r.student_id ??
                 r.studentId ??
@@ -108,8 +105,6 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
     if (percent >= 50) return 'from-yellow-400 to-yellow-600';
     return 'from-red-400 to-red-600';
   };
-
-  // клік по студенту – тягнемо відповіді з бекенду і показуємо в модальному вікні
   const handleStudentClick = async (result: StudentResult) => {
     if (!token) return;
 
@@ -127,7 +122,7 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
 
     try {
       const res = await fetch(
-        `http://localhost:8021/student/${result.studentId}/test/${test.id}`,
+        `https://veritas-t6l0.onrender.com/student/${result.studentId}/test/${test.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -137,7 +132,7 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
         throw new Error('Не вдалося завантажити відповіді студента');
       }
 
-      const data = await res.json(); // { studentId, testId, results }
+      const data = await res.json(); 
 
       const formatted: StudentAnswer[] = Array.isArray(data.results)
         ? data.results.map((row: any) => ({
@@ -185,7 +180,6 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100">
       <div className="max-w-7xl mx-auto p-6">
-        {/* ХЕДЕР */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -211,8 +205,6 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
             <p className="text-purple-600 text-lg">{test.subject}</p>
           </div>
         </motion.div>
-
-        {/* КАРТКА ТЕСТУ */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -249,8 +241,6 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
             </div>
           </div>
         </motion.div>
-
-        {/* ФІЛЬТР */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -275,8 +265,6 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
             />
           </div>
         </motion.div>
-
-        {/* СПИСОК СТУДЕНТІВ */}
         <AnimatePresence mode="wait">
           {filteredResults.length > 0 ? (
             <motion.div
@@ -357,8 +345,6 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* МОДАЛЬНЕ ВІКНО З ВІДПОВІДЯМИ */}
         <AnimatePresence>
           {showModal && selectedStudent && (
             <motion.div
@@ -395,8 +381,6 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
                       <p className="font-semibold text-gray-800 mb-2">
                         {ans.questionText}
                       </p>
-
-                      {/* MULTIPLE / SINGLE */}
                       {ans.options.length > 0 && (
                         <ul className="space-y-1 mb-2">
                           {ans.options.map(opt => (
@@ -416,8 +400,6 @@ export const TestResultsPage: React.FC<TestResultsPageProps> = ({
                           ))}
                         </ul>
                       )}
-
-                      {/* TEXT ANSWER */}
                       {ans.type === 'text' && (
                         <p className="text-gray-700">
                           <strong>Відповідь студента:</strong>{' '}

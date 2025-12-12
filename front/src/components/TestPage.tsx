@@ -25,11 +25,9 @@ export const TestPage: React.FC<TestPageProps> = ({
   const [score, setScore] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /** Перегляд історії */
   const isViewingHistory =
     session.finalScore !== undefined && session.finalScore !== null;
 
-  /** Таймер */
   useEffect(() => {
     if (isViewingHistory) return;
 
@@ -46,14 +44,12 @@ export const TestPage: React.FC<TestPageProps> = ({
     return () => clearInterval(timer);
   }, [isViewingHistory]);
 
-  /** Формат часу */
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  /** Збереження відповіді */
   const handleAnswerChange = (
     questionId: string,
     answer: string | string[]
@@ -64,25 +60,18 @@ export const TestPage: React.FC<TestPageProps> = ({
     }));
   };
 
-  // ==========================================================
-  //  ПРАВИЛЬНЕ ФОРМУВАННЯ ВІДПОВІДЕЙ (БО БЕК ЧЕКАЄ option.id)
-  // ==========================================================
-
   const buildFormattedAnswers = () => {
     return session.questions.map((q) => {
       const raw = answers[q.id];
 
       let selected: number[] = [];
 
-      // MULTIPLE
       if (Array.isArray(raw)) {
         selected = raw
           .filter(Boolean)
           .map((v) => Number(v))
           .filter((n) => !Number.isNaN(n));
       }
-
-      // SINGLE
       if (typeof raw === "string" && raw.trim() !== "") {
         const n = Number(raw);
         if (!Number.isNaN(n)) selected = [n];
@@ -99,9 +88,6 @@ export const TestPage: React.FC<TestPageProps> = ({
     });
   };
 
-  // ==========================================================
-  //  Надсилання
-  // ==========================================================
 
   const handleComplete = async () => {
     if (isSubmitting || isViewingHistory) return;
@@ -121,7 +107,7 @@ export const TestPage: React.FC<TestPageProps> = ({
         answers: formattedAnswers,
       };
 
-      const res = await fetch("http://localhost:8021/submissions", {
+      const res = await fetch("https://veritas-t6l0.onrender.com/submissions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -150,9 +136,6 @@ export const TestPage: React.FC<TestPageProps> = ({
 
   const handleGoHome = () => onBackToHome();
 
-  // ==========================================================
-  //  Малюємо питання
-  // ==========================================================
 
   const renderQuestion = (question: Question, index: number) => {
     const current = answers[question.id];
@@ -284,10 +267,6 @@ export const TestPage: React.FC<TestPageProps> = ({
     }
   };
 
-  // ==========================================================
-  //  РЕЗУЛЬТАТИ
-  // ==========================================================
-
   if (showResults || isViewingHistory) {
     const totalPoints = session.questions.reduce(
       (s, q) => s + q.points,
@@ -342,10 +321,6 @@ export const TestPage: React.FC<TestPageProps> = ({
       </div>
     );
   }
-
-  // ==========================================================
-  //  ОСНОВНА СТОРІНКА ТЕСТУ
-  // ==========================================================
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 p-8">

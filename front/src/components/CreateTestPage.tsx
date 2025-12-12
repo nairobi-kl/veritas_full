@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { getGroups } from '../api/api';
 
-// === Типи ===
 export interface DraftQuestion {
   type: 'single' | 'multiple' | 'text';
   question: string;
@@ -32,16 +31,15 @@ export interface CreateTestData {
   startTime: string;
   endDate: string;
   endTime: string;
-  maxScore: number; // ДОДАНО
+  maxScore: number; 
   questions: CreateQuestionData[];
 }
 
-// === API ===
 const saveTest = async (testData: any) => {
   const token = localStorage.getItem('token');
   if (!token) throw new Error('Не авторизовано');
 
-  const response = await fetch('http://localhost:8021/tests', {
+  const response = await fetch('https://veritas-t6l0.onrender.com/tests', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -58,7 +56,6 @@ const saveTest = async (testData: any) => {
   return response.json();
 };
 
-// === Компонент ===
 interface CreateTestPageProps {
   onBack: () => void;
   onSave: (testData: CreateTestData) => Promise<void>;
@@ -88,17 +85,13 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
     correctAnswer: [],
     points: 1,
   });
-
-  // Повертаємо groupOptions!
   const groupOptions = groups.map((g) => ({
     value: g.id,
     label: `${g.group_code}-${g.group_number}`,
   }));
 
-  // Підрахунок балів за питаннями
   const totalPointsFromQuestions = testData.questions.reduce((sum, q) => sum + q.points, 0);
 
-  // === Завантаження груп ===
   useEffect(() => {
     if (!user?.token) return;
     getGroups(user.token)
@@ -106,7 +99,6 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
       .catch((err) => console.error('Помилка отримання груп:', err));
   }, [user]);
 
-  // === Додавання питання ===
   const handleAddQuestion = () => {
     if (!newQuestion.question.trim()) {
       alert('Введіть текст питання!');
@@ -218,9 +210,16 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
       }
     }
 
-    // === Формуємо DATETIME для MySQL ===
-    const startAt = `${testData.startDate} ${testData.startTime}:00`;
-    const endAt = `${testData.endDate} ${testData.endTime}:00`;
+    const localToUTC = (date: string, time: string): { date: string; time: string } => {
+  if (!date || !time) return { date: '', time: '' };
+  const localDateTime = new Date(`${date}T${time}:00`); 
+  const utcDate = localDateTime.toISOString().slice(0, 10);
+  const utcTime = localDateTime.toISOString().slice(11, 16); 
+  return { date: utcDate, time: utcTime };
+};
+
+const startUTC = localToUTC(testData.startDate, testData.startTime);
+const endUTC = localToUTC(testData.endDate, testData.endTime);
 
     const payload = {
       title: testData.title,
@@ -229,28 +228,19 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
       created_by: Number(user?.id),
       max_score: testData.maxScore,
       status: 'published',
-
-      // ❗ ПРАВИЛЬНІ НАЗВИ ДЛЯ BACKEND
-      startDate: testData.startDate,
-      startTime: testData.startTime,
-      endDate: testData.endDate,
-      endTime: testData.endTime,
-
+  startDate: startUTC.date,
+  startTime: startUTC.time,
+  endDate: endUTC.date,
+  endTime: endUTC.time,
       group_ids: testData.groups,
       questions: testData.questions.map((q) => ({
         question: q.question,
         type: q.type,
         points: q.points,
-
-        // Варіанти відповідей
         options: q.type === 'text' ? undefined : q.options,
-
-        // Ключові слова — для текстових
         keywords: q.type === 'text' ? q.correctAnswer : undefined,
-
-        // ПРАВИЛЬНІ ВІДПОВІДІ — передаємо ТЕКСТ (не індекси!)
         correct_options: q.type !== 'text'
-          ? q.correctAnswer // ← вже масив правильних текстів!
+          ? q.correctAnswer 
           : undefined,
       })),
     };
@@ -275,7 +265,6 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
       className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 p-6 md:p-10"
     >
       <div className="max-w-5xl mx-auto space-y-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -298,8 +287,6 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
             <span className="text-sm font-medium">Назад</span>
           </button>
         </motion.div>
-
-        {/* Основні дані */}
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -332,8 +319,6 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
               />
             </div>
           </div>
-
-          {/* МАКСИМАЛЬНИЙ БАЛ */}
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl p-4 md:p-5 border border-purple-100/70 shadow-inner">
             <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/80 shadow-sm flex-shrink-0">
               <Info size={20} className="text-purple-600" />
@@ -381,8 +366,6 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
               className="w-full px-4 py-3 bg-gray-100/80 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white outline-none transition-all border border-transparent hover:border-purple-100"
             />
           </div>
-
-          {/* Дати та час */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm text-gray-700">Дата початку</label>
@@ -446,8 +429,6 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
             </div>
           </div>
         </motion.div>
-
-        {/* Додавання питання */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -470,8 +451,6 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
             onChange={(e) => setNewQuestion((p) => ({ ...p, question: e.target.value }))}
             className="w-full px-4 py-3 bg-white/90 border-0 rounded-xl focus:ring-2 focus:ring-purple-500 transition-all mb-4 shadow-sm hover:shadow-md outline-none"
           />
-
-          {/* Варіанти або ключові слова */}
           {newQuestion.type !== 'text' ? (
             <div className="space-y-2 mb-3">
               {newQuestion.options?.map((option, index) => (
@@ -513,7 +492,6 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
                   options: e.target.value
                     .split(',')
                     .map((w) => w.trim())
-                    .filter(Boolean),
                 }))
               }
               className="w-full h-24 px-4 py-3 bg-white/90 border border-purple-100 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all shadow-sm hover:shadow-md"
@@ -563,8 +541,6 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
             </button>
           </div>
         </motion.div>
-
-        {/* Список питань */}
         <div className="space-y-3">
           {testData.questions.map((q, idx) => (
             <motion.div
@@ -629,8 +605,6 @@ export const CreateTestPage: React.FC<CreateTestPageProps> = ({ onBack }) => {
             </motion.div>
           ))}
         </div>
-
-        {/* Зберегти */}
         <div className="flex justify-center mt-8 mb-4">
           <button
             onClick={handleSave}

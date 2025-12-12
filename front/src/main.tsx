@@ -9,7 +9,6 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 );
 
-// Після завантаження DOM
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')

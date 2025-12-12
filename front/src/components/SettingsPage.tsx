@@ -29,7 +29,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
     if (newPassword.length < 6) return alert('Мінімум 6 символів');
 
     try {
-      const res = await fetch('http://localhost:8021/student/change-password', {
+      const res = await fetch('https://veritas-t6l0.onrender.com/student/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
     if (!confirm('ОСТАННЄ ПОПЕРЕДЖЕННЯ. Це неможливо скасувати!')) return;
 
     try {
-      const res = await fetch('http://localhost:8021/student/delete-account', {
+      const res = await fetch('https://veritas-t6l0.onrender.com/student/delete-account', {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${user?.token}` },
       });
@@ -76,7 +76,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
 
   const handleExportExcel = async () => {
     try {
-      const res = await fetch('http://localhost:8021/student/export-results', {
+      const res = await fetch('https://veritas-t6l0.onrender.com/student/export-results', {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
 
@@ -108,8 +108,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
         <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-8">
           Налаштування
         </h1>
-
-        {/* Профіль — без змін */}
         <div className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl p-8 mb-6 border border-purple-100">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
             <User className="w-7 h-7 text-purple-600" />
@@ -124,8 +122,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
             <div><p className="text-gray-600">Роль</p><p className="font-bold text-purple-600 capitalize">{user?.role === 'teacher' ? 'Викладач' : 'Студент'}</p></div>
           </div>
         </div>
-
-        {/* Зміна пароля */}
         <div className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl p-8 mb-6 border border-purple-100">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
             <Lock className="w-7 h-7 text-purple-600" />
@@ -140,12 +136,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
             </button>
           </form>
         </div>
-
-        {/* Небезпечна зона — залишаємо твій дизайн */}
         <div className="bg-red-50 border-2 border-red-200 rounded-3xl p-8">
           <h2 className="text-2xl font-bold text-red-800 mb-6">Небезпечна зона</h2>
-
-          {/* Експорт тільки для викладача */}
             <button
               onClick={handleExportExcel}
               className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl mb-4 transition flex items-center justify-center gap-3"
@@ -153,8 +145,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
               <Download className="w-5 h-5" />
               Завантажити всі результати (Excel)
             </button>
-
-          {/* Видалення акаунту */}
           <button
             onClick={handleDeleteAccount}
             className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-3"
